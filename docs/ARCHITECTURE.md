@@ -1,53 +1,143 @@
-﻿# Cambric App Template Architecture
+# Architecture
 
 ## Purpose
 
 This repository is the reusable Cambric Software application foundation.
 
-It is intentionally mostly empty at the product layer.
+The goal is to provide the infrastructure that every Cambric product needs —
+storage, cache, updates, security, ecosystem communication — so each new
+product only has to implement its own domain logic.
 
-Digital-saver is the reference project that originally established many of the reusable ideas, but this repository is not a copy of Digital-saver.
+---
 
 ## Core principles
 
-- Local-first
-- Offline-capable
-- Shared Flutter application code
-- Android, Linux and Windows support
-- Reusable local storage
-- Reusable cache/download infrastructure
-- Centralized configuration
-- Platform-specific behavior isolated behind infrastructure
-- GitHub CI/CD
-- Product code separated from reusable infrastructure
+- **Local-first** — works without any remote server
+- **Offline-capable** — graceful degradation when network is unavailable
+- **Cross-platform** — Android, Linux, Windows
+- **No mandatory cloud** — cloud services are optional future additions
+- **No telemetry** — diagnostics remain on-device by default
+- **User data safety** — cache and user data are strictly separated
 
-## Product layer
+---
 
-Product-specific code belongs primarily in:
+## Layer model
 
-- `app/lib/screens`
-- `app/lib/models`
-- `app/lib/services`
-- `app/lib/widgets`
+```
+┌─────────────────────────────────────────────────────┐
+│                  Product Layer                       │
+│  screens/  services/  models/                        │
+├─────────────────────────────────────────────────────┤
+│                  Widget Layer                        │
+│  widgets/  theme/                                    │
+├─────────────────────────────────────────────────────┤
+│                  Core Layer                          │
+│  core/config  core/storage  core/cache               │
+│  core/network  core/updates  core/security           │
+│  core/platform  core/lifecycle  core/ecosystem       │
+└─────────────────────────────────────────────────────┘
+```
 
-## Core layer
+Product code depends on core. Core never depends on product code.
 
-Reusable infrastructure belongs primarily in:
+---
 
-- `app/lib/core/config`
-- `app/lib/core/storage`
-- `app/lib/core/cache`
-- `app/lib/core/network`
-- `app/lib/core/security`
-- `app/lib/core/updates`
-- `app/lib/core/platform`
+## Core subsystems
+
+### config
+
+`CambricConfig` — loads `cambric_config.json` at startup. Central identity:
+product ID, name, version, repository, feature flags, localization, environment.
+
+### storage
+
+- `CambricPaths` — all filesystem paths, platform-safe
+- `AtomicFileService` — safe write → verify → rename
+- `LocalStorage` — key/value JSON persistence (user data)
+- `BackupService` — versioned local backups
+- `MigrationService` — sequential schema migrations
+- `RestoreService` — restore from backup
+
+### cache
+
+- `CacheService` — disk cache with TTL, metadata, size limits
+- `CacheEntryMetadata` — per-entry timestamps and size
+- `CacheCleanupService` — evict expired, enforce limits, clear all
+
+### network
+
+- `NetworkService` — HTTP with retry and timeout
+- `ConnectivityService` — online/offline/unknown (no plugin required)
+
+### updates
+
+- `ReleaseService` — GitHub release discovery with local cache fallback
+- `UpdateService` — full state machine (idle → checking → available → downloading → verifying → readyToInstall → installing → installed)
+- `UpdateVerificationService` — SHA-256 checksum verification
+- `UpdateRollbackService` — pre-install rollback point
+
+### platform
+
+- `PlatformService` — Windows/Linux/Android detection
+- `InstallerService` — abstract + platform implementations
+- `DesktopIntegrationService` — shortcuts, metadata
+
+### security
+
+- `SecurityService` — SHA-256, HMAC, file checksum
+- `InputSanitizationService` — validation and sanitization
+- `SecretRedactionService` — redact secrets from logs/exports
+- `AccessControlService` — capability-based access control
+
+### lifecycle
+
+- `AppLifecycleService` — Flutter lifecycle observer
+- `VersionService` / `AppVersion` — authoritative version
+- `EnvironmentService` — development/test/production
+- `FeatureFlagService` — runtime feature flags
+- `Clock` / `SystemClock` / `FakeClock` — injectable time
+
+### ecosystem
+
+- `CambricEcosystemService` — stable local installation identity
+- `ProductRegistryService` — shared multi-product registry
+
+---
+
+## Data directory layout
+
+```
+Cambric/
+├── Core/
+│   ├── Registry/       — one JSON file per registered product
+│   ├── Connections/    — approved inter-product connections
+│   └── Ecosystem/      — local installation identity
+├── Products/
+│   └── <productId>/
+│       ├── Data/       — persistent user data
+│       └── Cache/      — disposable cache
+├── Shared/Data/        — shared approved data
+├── Downloads/          — staged release downloads
+├── Updates/            — staged updates + rollback info
+├── Backups/            — versioned application backups
+└── Logs/               — application logs
+```
+
+---
 
 ## Important boundary
 
-Product code should not directly implement platform-specific behavior when a reusable abstraction can handle it.
+- Cache is DISPOSABLE. Clearing cache never removes user data.
+- User data lives in `Products/<id>/Data/`.
+- Backups are NOT cache. They are not cleared with cache cleanup.
+- Secrets are never placed in source code or config files.
 
-Cache data is disposable.
+---
 
-Persistent application data is not cache data.
+## Adding a new subsystem
 
-The base template intentionally contains no AI subsystem, BLE subsystem, cloud backend, health subsystem, smartwatch protocol, payment subsystem or other product-specific system.
+1. Create a directory under `app/lib/core/<subsystem>/`.
+2. Add services with clean interfaces.
+3. Register via `ServiceRegistry` if needed.
+4. Add unit tests under `app/test/core/`.
+5. Document in `docs/`.

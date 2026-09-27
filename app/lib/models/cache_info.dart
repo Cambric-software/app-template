@@ -1,4 +1,4 @@
-﻿class CacheInfo {
+class CacheInfo {
   final int sizeBytes;
 
   const CacheInfo({

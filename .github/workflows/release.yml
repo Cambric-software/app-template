@@ -1,4 +1,4 @@
-﻿name: Release
+name: Release
 
 on:
   push:
@@ -13,74 +13,138 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - working-directory: app
+
+      - name: Install dependencies
+        working-directory: app
         run: flutter pub get
-      - working-directory: app
+
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Test
+        working-directory: app
+        run: flutter test
+
+      - name: Build Windows
+        working-directory: app
         run: flutter build windows --release
+
+      - name: Generate checksum
+        shell: pwsh
+        run: |
+          $src = "app/build/windows/x64/runner/Release"
+          Compress-Archive -Path "$src/*" -DestinationPath windows.zip
+          $hash = (Get-FileHash windows.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  windows.zip" | Out-File -FilePath windows.zip.sha256 -Encoding ASCII
+
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: app/build/windows/x64/runner/Release
+          path: |
+            windows.zip
+            windows.zip.sha256
 
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - working-directory: app
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev
+
+      - name: Install dependencies
+        working-directory: app
         run: flutter pub get
-      - working-directory: app
+
+      - name: Analyze
+        working-directory: app
+        run: flutter analyze
+
+      - name: Test
+        working-directory: app
+        run: flutter test
+
+      - name: Build Linux
+        working-directory: app
         run: flutter build linux --release
+
+      - name: Package and checksum
+        run: |
+          tar -czf linux.tar.gz -C app/build/linux/x64/release/bundle .
+          sha256sum linux.tar.gz > linux.tar.gz.sha256
+
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: app/build/linux/x64/release/bundle
+          path: |
+            linux.tar.gz
+            linux.tar.gz.sha256
 
   build-android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - working-directory: app
+
+      - name: Install dependencies
+        working-directory: app
         run: flutter pub get
-      - working-directory: app
+
+      - name: Build APK
+        working-directory: app
         run: flutter build apk --release
+
+      - name: Checksum
+        run: |
+          cp app/build/app/outputs/flutter-apk/app-release.apk android.apk
+          sha256sum android.apk > android.apk.sha256
+
       - uses: actions/upload-artifact@v4
         with:
           name: android
-          path: app/build/app/outputs/flutter-apk/app-release.apk
+          path: |
+            android.apk
+            android.apk.sha256
 
   release:
-    needs:
-      - build-windows
-      - build-linux
-      - build-android
+    needs: [build-windows, build-linux, build-android]
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: release-files
 
-      - name: Package release files
-        run: |
-          cd release-files
-          zip -r ../windows.zip windows
-          zip -r ../linux.zip linux
-          cp android/app-release.apk ../android.apk
+      - name: List artifacts
+        run: find release-files -type f
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            windows.zip
-            linux.zip
-            android.apk
+            release-files/windows/windows.zip
+            release-files/windows/windows.zip.sha256
+            release-files/linux/linux.tar.gz
+            release-files/linux/linux.tar.gz.sha256
+            release-files/android/android.apk
+            release-files/android/android.apk.sha256

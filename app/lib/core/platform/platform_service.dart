@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 class PlatformService {
   static bool get isWindows => Platform.isWindows;
