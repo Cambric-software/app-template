@@ -1,0 +1,30 @@
+﻿name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "stable"
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Android
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Build Linux
+        working-directory: app
+        run: flutter config --enable-linux-desktop && flutter build linux --release
