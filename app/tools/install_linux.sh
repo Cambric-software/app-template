@@ -1,46 +1,56 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
+# Linux installation helper for Cambric app projects.
+# Run from the repository root after building the Linux application.
 set -e
 
 BUILD_PATH="./app/build/linux/x64/release/bundle"
 INSTALL_NAME="cambric-app"
+DISPLAY_NAME="Cambric App"
 
-if [ ! -d "" ]; then
-    echo "Linux build not found. Run: flutter build linux"
+if [ ! -d "$BUILD_PATH" ]; then
+    echo "Linux build not found at $BUILD_PATH"
+    echo "Run: cd app && flutter build linux --release"
     exit 1
 fi
 
-INSTALL_DIR="C:\Users\m/.local/share/"
-BIN_DIR="C:\Users\m/.local/bin"
-DESKTOP_DIR="C:\Users\m/.local/share/applications"
+INSTALL_DIR="$HOME/.local/share/$INSTALL_NAME"
+BIN_DIR="$HOME/.local/bin"
+DESKTOP_DIR="$HOME/.local/share/applications"
 
-mkdir -p "" "" ""
+mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 
-cp -r ""/. ""/
+# Copy bundle
+cp -r "$BUILD_PATH/." "$INSTALL_DIR/"
 
-MAIN_BINARY="/cambric_app"
+# Detect the main executable (Flutter Linux produces 'cambric_app' by default)
+MAIN_BINARY="$INSTALL_DIR/cambric_app"
 
-if [ ! -f "" ]; then
-    echo "Expected Flutter executable was not found: "
+if [ ! -f "$MAIN_BINARY" ]; then
+    echo "Expected Flutter executable was not found: $MAIN_BINARY"
+    echo "Check the binary name in $INSTALL_DIR and update MAIN_BINARY in this script."
     exit 1
 fi
 
-cat > "/" <<EOF
+# Create wrapper script in ~/.local/bin
+WRAPPER="$BIN_DIR/$INSTALL_NAME"
+cat > "$WRAPPER" <<EOF
 #!/usr/bin/env bash
-exec "" "\$@"
+exec "$MAIN_BINARY" "\$@"
 EOF
+chmod +x "$WRAPPER"
 
-chmod +x "/"
-
-cat > "/.desktop" <<EOF
+# Create .desktop launcher
+DESKTOP_FILE="$DESKTOP_DIR/$INSTALL_NAME.desktop"
+cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Cambric App
-Exec=/
+Name=$DISPLAY_NAME
+Exec=$MAIN_BINARY
 Terminal=false
 Categories=Utility;
 EOF
+chmod +x "$DESKTOP_FILE"
 
-chmod +x "/.desktop"
-
-echo "Installed to "
-echo "Desktop launcher created."
+echo "Installed to: $INSTALL_DIR"
+echo "Wrapper script: $WRAPPER"
+echo "Desktop launcher: $DESKTOP_FILE"
