@@ -107,6 +107,61 @@ if (Test-Path $configPath) {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
+Section "VERSION DRIFT CHECK"
+# ──────────────────────────────────────────────────────────────────────────────
+# Verifies that cambric_config.json version matches pubspec.yaml version.
+# These must stay in sync — divergence causes diagnostic confusion.
+
+$pubspecPath2 = Join-Path $root "app\pubspec.yaml"
+$configPath2  = Join-Path $root "app\lib\core\config\cambric_config.json"
+
+if ((Test-Path $pubspecPath2) -and (Test-Path $configPath2)) {
+    try {
+        $pubspecRaw = Get-Content $pubspecPath2 -Raw
+        $pubspecVersion = [regex]::Match($pubspecRaw, '^version:\s*(\S+)', 'Multiline').Groups[1].Value
+        # Strip build suffix (+N)
+        $pubspecSemver = $pubspecVersion -replace '\+.*$', ''
+
+        $cfg = Get-Content $configPath2 -Raw | ConvertFrom-Json
+        $configVersion = $cfg.product.version
+
+        if ($pubspecSemver -and $configVersion) {
+            if ($pubspecSemver -eq $configVersion) {
+                Pass "Version in sync: pubspec=$pubspecSemver, config=$configVersion"
+            } else {
+                Fail "VERSION DRIFT: pubspec.yaml version=$pubspecSemver but cambric_config.json version=$configVersion — run: dart run scripts/cambric.dart release <version>"
+            }
+        } else {
+            Warn "Could not read version from pubspec or config"
+        }
+    } catch {
+        Warn "Version drift check failed: $_"
+    }
+} else {
+    Warn "Skipping version drift check — files missing"
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+Section "VERSION DRIFT CHECK"
+# ──────────────────────────────────────────────────────────────────────────────
+
+$pubspecPath2 = Join-Path $root "app\pubspec.yaml"
+$configPath2  = Join-Path $root "app\lib\core\config\cambric_config.json"
+
+if ((Test-Path $pubspecPath2) -and (Test-Path $configPath2)) {
+    try {
+        $pubspecRaw    = Get-Content $pubspecPath2 -Raw
+        $pubspecVer    = [regex]::Match($pubspecRaw, '^version:\s*(\S+)', 'Multiline').Groups[1].Value -replace '\+.*$', ''
+        $cfg           = Get-Content $configPath2 -Raw | ConvertFrom-Json
+        $configVer     = $cfg.product.version
+        if ($pubspecVer -and $configVer) {
+            if ($pubspecVer -eq $configVer) { Pass "Versions in sync: $pubspecVer" }
+            else { Fail "VERSION DRIFT: pubspec=$pubspecVer config=$configVer — run: dart run scripts/cambric.dart release <version>" }
+        } else { Warn "Could not read version from pubspec or config" }
+    } catch { Warn "Version drift check failed: $_" }
+} else { Warn "Skipping version drift check — files missing" }
+
+# ──────────────────────────────────────────────────────────────────────────────
 Section "CORRUPTED FILENAMES"
 # ──────────────────────────────────────────────────────────────────────────────
 

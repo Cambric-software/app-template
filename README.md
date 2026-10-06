@@ -1,5 +1,7 @@
 # Cambric App Template
 
+[![CI](https://github.com/Cambric-software/app-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Cambric-software/app-template/actions/workflows/ci.yml)
+
 A reusable, production-oriented Flutter application foundation for Cambric Software products.
 
 Supports **Android**, **Windows**, and **Linux**.
@@ -49,9 +51,12 @@ flutter run
 | Security | `SecurityService`, `InputSanitizationService`, `SecretRedactionService`, `AccessControlService` |
 | Ecosystem | `CambricEcosystemService`, `ProductRegistryService` — multi-product local discovery |
 | Lifecycle | `AppLifecycleService`, `VersionService`, `EnvironmentService`, `FeatureFlagService`, `Clock` |
+| Logging | `CambricLogger` — structured logging with rolling in-memory records |
+| Diagnostics | `DiagnosticsService` — local diagnostic report generator |
+| Localization | English + Arabic (RTL) configured in `cambric_config.json` |
 | UX | `OnboardingScreen`, `CambricFirstRunWizard`, `AppTheme`, `EmptyStateWidget`, `LoadingWidget`, `ErrorWidget` |
-| Developer tools | `scripts-doctor.ps1`, `.template/setup/setup.ps1` |
-| CI/CD | GitHub Actions: analyze, test, build Windows/Linux/Android, publish release with SHA-256 checksums |
+| Developer tools | `scripts-doctor.ps1` (with version drift check), `.template/setup/setup.ps1` |
+| CI/CD | GitHub Actions: analyze, test, build Windows/Linux/Android, security scan, publish release with SHA-256 checksums |
 
 ---
 
