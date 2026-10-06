@@ -23,7 +23,8 @@ It is **not** a Firebase template, a cloud platform, or an AI framework. It is a
 git clone https://github.com/Cambric-software/app-template.git my-app
 cd my-app
 
-# 2. Run the setup wizard
+# 2. Run the setup wizard — configures app type, platforms, navigation,
+#    auth, language, features, theme, and more
 .\.template\setup\setup.ps1
 
 # 3. Install Flutter dependencies
@@ -32,6 +33,16 @@ flutter pub get
 
 # 4. Run
 flutter run
+```
+
+After building for release, use the install wizard:
+
+```powershell
+# Windows
+.\.template\setup\install_wizard.ps1 -Platform windows
+
+# Android (requires connected device)
+.\.template\setup\install_wizard.ps1 -Platform android
 ```
 
 ---
