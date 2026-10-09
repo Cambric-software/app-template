@@ -1,0 +1,16 @@
+{
+  "lockVersion": 1,
+  "generatedAt": "2026-10-10T00:00:00.000Z",
+  "cambric": {
+    "templateVersion": "0.1.0",
+    "appVersion": "0.1.0",
+    "repository": "Cambric-software/app-template"
+  },
+  "environment": {
+    "flutter": "3.47.2",
+    "dart": "3.13.2",
+    "platform": "windows",
+    "os": "Microsoft Windows 10.0.26200"
+  },
+  "note": "Regenerate with: .\\scripts\\cambric-changelog.ps1  |  Check drift with: .\\scripts-doctor.ps1"
+}
