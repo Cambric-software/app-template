@@ -106,6 +106,65 @@ if (Test-Path $configPath) {
     Fail "cambric_config.json not found"
 }
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+Section "TEMPLATE VERSION CHECK"
+# ──────────────────────────────────────────────────────────────────────────────
+
+$stateDir  = Join-Path $root ".cambric"
+$stateFile = Join-Path $stateDir "state.json"
+New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
+
+$currentTplVer = "0.1.0"
+if (Test-Path $configPath) {
+    try {
+        $cfgT = Get-Content $configPath -Raw | ConvertFrom-Json
+        if ($cfgT.product.templateVersion) { $currentTplVer = $cfgT.product.templateVersion }
+    } catch {}
+}
+
+$useCached = $false
+if (Test-Path $stateFile) {
+    try {
+        $st = Get-Content $stateFile -Raw | ConvertFrom-Json
+        if ($st.templateVersionCheck) {
+            $ts = [datetime]::Parse($st.templateVersionCheck.timestamp)
+            if (([datetime]::Now - $ts).TotalHours -lt 24) { $useCached = $true }
+        }
+    } catch {}
+}
+
+if ($useCached) {
+    $cached = $st.templateVersionCheck
+    if ($cached.latestVersion -and $cached.latestVersion -ne $currentTplVer) {
+        Warn "Template update available: $($cached.latestVersion) (you have $currentTplVer) — github.com/Cambric-software/app-template"
+    } else { Pass "Template version: up to date ($currentTplVer)" }
+} else {
+    try {
+        $resp = Invoke-WebRequest `
+            -Uri "https://api.github.com/repos/Cambric-software/app-template/releases/latest" `
+            -Headers @{Accept="application/vnd.github+json"} `
+            -UseBasicParsing -TimeoutSec 6 2>$null
+        $latest = ($resp.Content | ConvertFrom-Json).tag_name -replace '^v',''
+        $stObj = if (Test-Path $stateFile) { Get-Content $stateFile -Raw | ConvertFrom-Json } else { [PSCustomObject]@{} }
+        $stObj | Add-Member -NotePropertyName "templateVersionCheck" -NotePropertyValue ([PSCustomObject]@{
+            latestVersion=$latest; currentVersion=$currentTplVer; timestamp=(Get-Date).ToString("o")
+        }) -Force
+        $stObj | ConvertTo-Json -Depth 5 | Set-Content $stateFile -Encoding UTF8
+        if ($latest -and $latest -ne $currentTplVer) {
+            Warn "Template update: $latest available (you have $currentTplVer)"
+        } else { Pass "Template version: up to date ($currentTplVer)" }
+    } catch { Pass "Template version: check skipped (offline or rate-limited)" }
+}
+
+# Record this doctor run in .cambric/state.json
+$drObj = if (Test-Path $stateFile) { Get-Content $stateFile -Raw | ConvertFrom-Json } else { [PSCustomObject]@{} }
+$drObj | Add-Member -NotePropertyName "lastDoctor" -NotePropertyValue ([PSCustomObject]@{
+    timestamp=(Get-Date).ToString("o"); passed=($failed -eq 0)
+}) -Force
+$drObj | ConvertTo-Json -Depth 5 | Set-Content $stateFile -Encoding UTF8
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 Section "VERSION DRIFT CHECK"
 # ──────────────────────────────────────────────────────────────────────────────

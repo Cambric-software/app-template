@@ -14,3 +14,7 @@ build/
 
 # Windows
 Thumbs.db
+
+# Cambric local state
+.cambric/
+
