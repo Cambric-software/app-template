@@ -2,125 +2,122 @@
 
 [![CI](https://github.com/Cambric-software/app-template/actions/workflows/ci.yml/badge.svg)](https://github.com/Cambric-software/app-template/actions/workflows/ci.yml)
 
-A reusable, production-oriented Flutter application foundation for Cambric Software products.
+A Flutter foundation for Cambric applications on **Android, Windows and Linux**.
+Local-first, no account and no telemetry: the template ships the parts every
+Cambric app needs, in the same visual language as the web and game templates.
 
-Supports **Android**, **Windows**, and **Linux**.
+## What is included
 
----
-
-## What this is
-
-A starting point for building Cambric applications. It provides the infrastructure every Cambric product needs so you can focus on your product-specific code.
-
-It is **not** a Firebase template, a cloud platform, or an AI framework. It is a local-first, offline-capable Flutter foundation.
-
----
+- **A working shell**, not a blank screen: bottom navigation on phones, a
+  navigation rail on desktop, with Home, Components and Settings.
+- **The Cambric design system**: complete light and dark themes, semantic
+  colours, spacing, radii, type scale, and a widget library (`DsPage`,
+  `DsSection`, `DsCard`, `DsMetricTile`, `DsStatusPill`, `DsEmptyState`,
+  `DsSegmented`, `DsGrid`).
+- **First-run onboarding** with three real pages, persisted completion, and a
+  Replay action in Settings.
+- **Bundled configuration** (`lib/core/config/cambric_config.json`): product
+  name, id, version, repository and capabilities. The app reads it at startup.
+- **Local infrastructure**: product-scoped storage paths, atomic file writes,
+  a cache with cleanup, a diagnostics report, migration helpers, security
+  helpers (input sanitisation, secret redaction) and a release check that stays
+  disabled until a repository is configured.
+- **A download page** in `app/landing/`, using the same palette and card shapes
+  as the Max Tools page.
+- **68 tests**, and `flutter analyze` reports no issues.
 
 ## Quick start
 
 ```powershell
-# 1. Clone
 git clone https://github.com/Cambric-software/app-template.git my-app
 cd my-app
-
-# 2. Run the setup wizard — configures app type, platforms, navigation,
-#    auth, language, features, theme, and more
-.\.template\setup\setup.ps1
-
-# 3. Install Flutter dependencies
+.\.template\setup\setup.ps1      # name, platforms, ids, locale
 cd app
 flutter pub get
-
-# 4. Run
-flutter run
+flutter run -d windows           # or: flutter run
+flutter test
 ```
 
-After building for release, use the install wizard:
+The setup wizard is a PowerShell script. On Linux or macOS, edit
+`app/lib/core/config/cambric_config.json` and `app/cambric.manifest.json`
+directly; nothing else in the template is Windows-only.
 
-```powershell
-# Windows
-.\.template\setup\install_wizard.ps1 -Platform windows
+## What it is not
 
-# Android (requires connected device)
-.\.template\setup\install_wizard.ps1 -Platform android
+- **No backend, no account system, no analytics.** The template never sends
+  anything anywhere. A product that needs a server adds one deliberately.
+- **No auto-update.** The release service can check a GitHub repository and
+  report a newer version; it does not download or install anything. Set
+  `release.repository` in the config to enable the check, or leave it empty and
+  the check is disabled rather than faked.
+- **No fake data.** Where a new product has to supply something (release asset
+  names, product screens), the template labels it as a placeholder.
+
+## Structure
+
+```text
+app/
+  lib/
+    app/          app root, service wiring, responsive shell
+    core/         config, storage, cache, diagnostics, updates, security
+    screens/      Home, Components, Settings, Cache, Diagnostics, onboarding
+    services/     product-level services (preferences lives here)
+    theme/        colours, design tokens, ThemeData
+    widgets/      the Cambric widget library
+  landing/        static download page (HTML/CSS/JS, no build step)
+  test/           widget and unit tests
+docs/             architecture, cache, storage, updates, releases, design
+.template/        setup wizard and scaffolding
 ```
 
----
+Every Dart file under `lib/` is reachable from `main.dart` or from a test; there
+is no unused service tree.
 
-## What's included
+## Design
 
-| Area | What's provided |
+The palette, radii, type scale and component rules are in
+[docs/DESIGN.md](docs/DESIGN.md). The code is authoritative:
+`app/lib/theme/app_colors.dart`, `design_tokens.dart`, `app_theme.dart` and
+`app/lib/widgets/ds_widgets.dart`.
+
+The same values are used by `web-template` (CSS) and `game-template` (game UI),
+so a customer moving between Cambric products sees one family. If a token
+changes, change it in all three in the same pass.
+
+## Download page
+
+`app/landing/` is a plain HTML page with no dependencies. Before publishing,
+replace the `__APP_NAME__`, `__REPO__` and asset placeholders listed in
+`app/landing/README.md`. Links use the version-independent
+`releases/latest/download/` alias, so a release does not require a page rebuild.
+The page shows a version only when one is supplied; it never invents one.
+
+## Renaming for a new product
+
+1. Run `.template\setup\setup.ps1`, or edit `cambric_config.json` and
+   `cambric.manifest.json`.
+2. Change the Android application id and the Windows runner metadata if the
+   wizard did not.
+3. Replace the three demo screens with your product screens, keeping the
+   `Ds*` components.
+4. Fill in `app/landing/` and publish it beside your releases.
+5. Keep the security and privacy statements in `SECURITY.md` true for your
+   product; do not copy claims the product does not meet.
+
+## Documentation
+
+| Document | Read it when |
 |---|---|
-| Configuration | `CambricConfig` — central product identity, feature flags, localization, branding |
-| Storage | `LocalStorage`, `AtomicFileService`, `BackupService`, `MigrationService`, `RestoreService` |
-| Cache | `CacheService` (TTL, size limits, metadata), `CacheCleanupService` |
-| Network | `NetworkService` (retry/timeout), `ConnectivityService` (online/offline/unknown) |
-| Updates | Full state machine: check → download → verify → install, with rollback |
-| Releases | `ReleaseService` — GitHub release discovery with local metadata cache |
-| Installation | `InstallerService` — platform-specific (Windows/Linux/Android) |
-| Desktop | `DesktopIntegrationService` — shortcuts, metadata |
-| Security | `SecurityService`, `InputSanitizationService`, `SecretRedactionService`, `AccessControlService` |
-| Ecosystem | `CambricEcosystemService`, `ProductRegistryService` — multi-product local discovery |
-| Lifecycle | `AppLifecycleService`, `VersionService`, `EnvironmentService`, `FeatureFlagService`, `Clock` |
-| Logging | `CambricLogger` — structured logging with rolling in-memory records |
-| Diagnostics | `DiagnosticsService` — local diagnostic report generator |
-| Localization | English + Arabic (RTL) configured in `cambric_config.json` |
-| UX | `OnboardingScreen`, `CambricFirstRunWizard`, `AppTheme`, `EmptyStateWidget`, `LoadingWidget`, `ErrorWidget` |
-| Developer tools | `scripts-doctor.ps1` (with version drift check), `.template/setup/setup.ps1` |
-| CI/CD | GitHub Actions: analyze, test, build Windows/Linux/Android, security scan, publish release with SHA-256 checksums |
+| [SETUP.md](SETUP.md) | You are creating a product from the template. |
+| [docs/DESIGN.md](docs/DESIGN.md) | You are styling a screen or adding a component. |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | You need to know how the layers fit. |
+| [docs/STORAGE.md](docs/STORAGE.md) | You are writing user data. |
+| [docs/CACHE.md](docs/CACHE.md) | You are adding disposable files. |
+| [docs/UPDATES.md](docs/UPDATES.md) | You are wiring release checks. |
+| [docs/TESTING.md](docs/TESTING.md) | You are adding tests. |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | A build or run fails. |
 
----
+## Licence
 
-## Project structure
-
-```
-app-template/
-├── app/                    Flutter application
-│   ├── lib/
-│   │   ├── core/           Reusable infrastructure (never product-specific)
-│   │   ├── screens/        Product screens (replace with your own)
-│   │   ├── widgets/        Shared widgets
-│   │   ├── models/         Shared models
-│   │   ├── services/       Product services (replace with your own)
-│   │   └── theme/          AppTheme
-│   └── test/               Unit, widget, and integration tests
-├── .template/setup/        Developer setup wizard
-├── docs/                   Documentation
-├── .github/workflows/      CI/CD
-└── scripts-doctor.ps1      Repository health check
-```
-
----
-
-## Developer commands
-
-```powershell
-# Health check
-.\scripts-doctor.ps1
-
-# Setup a new project from this template
-.\.template\setup\setup.ps1
-
-# Run tests
-cd app && flutter test
-
-# Analyze
-cd app && flutter analyze
-
-# Build
-cd app && flutter build windows --release
-cd app && flutter build linux --release
-cd app && flutter build apk --release
-```
-
----
-
-## See also
-
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [DEVELOPMENT.md](docs/DEVELOPMENT.md)
-- [STORAGE.md](docs/STORAGE.md)
-- [CACHE.md](docs/CACHE.md)
-- [UPDATES.md](docs/UPDATES.md)
-- [SECURITY.md](SECURITY.md)
-- [SETUP.md](SETUP.md)
+Proprietary. See [LICENSE](LICENSE). Security reporting is described in
+[SECURITY.md](SECURITY.md).

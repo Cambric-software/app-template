@@ -76,9 +76,12 @@ import 'package:cambric_app/core/storage/local_storage.dart';
 ## Adding a new screen
 
 1. Create `app/lib/screens/<name>/<name>_screen.dart`.
-2. Use `Scaffold` + `AppBar` consistently.
-3. Use `LoadingWidget`, `EmptyStateWidget`, `ErrorWidget` for states.
-4. Add a route in your navigation setup if applicable.
+2. Wrap the body in `DsPage(title: ..., child: ...)` so padding, max width and
+   the scroll behaviour match every other screen.
+3. Compose `DsSection`, `DsCard`, `DsMetricTile`, `DsStatusPill` and
+   `DsEmptyState` rather than hand-building a card or an empty view.
+4. Add it to the shell in `app/lib/app/app_shell.dart` if it is a destination,
+   or push it with `MaterialPageRoute` from the place that owns it.
 5. Add a widget test under `app/test/screens/`.
 
 ---
@@ -95,18 +98,15 @@ import 'package:cambric_app/core/storage/local_storage.dart';
 
 ## Environment configuration
 
-Set the environment via the `CAMBRIC_ENV` compile-time constant:
-
-```powershell
-flutter run --dart-define=CAMBRIC_ENV=development
-flutter build windows --release --dart-define=CAMBRIC_ENV=production
-```
-
-Or set it in `cambric_config.json`:
+`environment` in `cambric_config.json` is the single source of truth:
 
 ```json
 { "environment": "production" }
 ```
+
+The template does not read a `--dart-define` for this. If a product needs
+build-time separation, add it deliberately and document it; do not add a second
+environment source that can disagree with the config file.
 
 ---
 
@@ -146,6 +146,25 @@ flutter build linux --release
 # Android
 flutter build apk --release
 ```
+
+### Local install helpers
+
+After a release build, `app/tools/` can install the bundle locally without
+building an installer:
+
+```powershell
+.\app\tools\install_windows.ps1 -InstallName "MyApp"
+```
+
+```bash
+INSTALL_NAME=my-app MAIN_BINARY_NAME=cambric_app ./app/tools/install_linux.sh
+```
+
+The Windows helper accepts `-BuildPath`, `-InstallName` and `-NoShortcut`. The
+Linux helper reads `INSTALL_NAME`, `DISPLAY_NAME`, `MAIN_BINARY_NAME` and
+`BUILD_PATH` from the environment, defaulting to the template's names. These
+helpers are for local testing, not for shipping; the release workflow publishes
+the archives.
 
 ---
 

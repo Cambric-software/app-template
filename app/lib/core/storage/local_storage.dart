@@ -1,51 +1,41 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
-
 import 'atomic_file_service.dart';
+import 'cambric_paths.dart';
 
 /// Persistent key/value file storage for non-sensitive application data.
 ///
-/// Each key is stored as a separate JSON file.  This keeps individual
-/// reads/writes cheap and avoids locking a single shared database file.
+/// Each key is stored as a separate JSON file under
+/// `Cambric/Products/<productId>/Data/`. This keeps individual reads/writes
+/// cheap and avoids locking a single shared database file.
 ///
-/// Data stored here is USER DATA — it is NEVER cleared with cache.
+/// Data stored here is USER DATA - it is NEVER cleared with cache.
 /// Use [CacheService] for disposable data.
 ///
 /// Usage:
 ///
 /// ```dart
-/// await LocalStorage.instance.write('settings', {'theme': 'dark'});
-/// final settings = await LocalStorage.instance.read('settings');
+/// final storage = LocalStorage(productId: 'my-product');
+/// await storage.write('settings', {'theme': 'dark'});
+/// final settings = await storage.read('settings');
 /// ```
 class LocalStorage {
-  static final LocalStorage instance = LocalStorage._();
+  /// Creates storage scoped to [productId].
+  LocalStorage({required this.productId});
 
-  LocalStorage._();
+  /// Product whose data directory is used.
+  final String productId;
 
   final AtomicFileService _atomic = AtomicFileService();
-  Directory? _root;
 
-  Future<Directory> get _dataDirectory async {
-    if (_root != null) return _root!;
-
-    final base = await getApplicationSupportDirectory();
-    final dir = Directory(
-      '${base.path}${Platform.pathSeparator}data',
-    );
-
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
-
-    _root = dir;
-    return dir;
-  }
+  /// Directory where this product's user data lives.
+  Future<Directory> get dataDirectory =>
+      CambricPaths.productData(productId);
 
   Future<File> _file(String key) async {
     _validateKey(key);
-    final dir = await _dataDirectory;
+    final dir = await dataDirectory;
     return File(
       '${dir.path}${Platform.pathSeparator}${_sanitizeKey(key)}.json',
     );
@@ -68,7 +58,7 @@ class LocalStorage {
       if (content.trim().isEmpty) return null;
       return jsonDecode(content);
     } on FormatException {
-      // Corrupt file — treat as missing.
+      // Corrupt file - treat as missing.
       return null;
     }
   }
@@ -79,7 +69,7 @@ class LocalStorage {
     return file.exists();
   }
 
-  /// Deletes the value stored under [key].  No-op if absent.
+  /// Deletes the value stored under [key]. No-op if absent.
   Future<void> delete(String key) async {
     final file = await _file(key);
     if (await file.exists()) await file.delete();
@@ -87,7 +77,7 @@ class LocalStorage {
 
   /// Returns all keys currently stored.
   Future<List<String>> keys() async {
-    final dir = await _dataDirectory;
+    final dir = await dataDirectory;
     final result = <String>[];
 
     await for (final entity in dir.list()) {
@@ -102,10 +92,10 @@ class LocalStorage {
 
   /// Clears all stored values.
   ///
-  /// WARNING: This deletes persistent user data.  Only call this when the
-  /// user explicitly requests a data reset, not when clearing cache.
+  /// WARNING: This deletes persistent user data. Only call this when the user
+  /// explicitly requests a data reset, not when clearing cache.
   Future<void> clear() async {
-    final dir = await _dataDirectory;
+    final dir = await dataDirectory;
     if (!await dir.exists()) return;
 
     await for (final entity in dir.list()) {
@@ -114,8 +104,6 @@ class LocalStorage {
       }
     }
   }
-
-  // ── helpers ───────────────────────────────────────────────────────────────
 
   void _validateKey(String key) {
     if (key.trim().isEmpty) {

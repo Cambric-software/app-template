@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart' show rootBundle;
+
 import '../lifecycle/feature_flag_service.dart';
 
 /// Central product identity and configuration.
@@ -182,6 +184,26 @@ class CambricConfig {
       return CambricConfig.fromJson(data);
     } catch (_) {
       // Malformed config — return defaults rather than crash.
+      return const CambricConfig(
+        productId: 'cambric-app-product',
+        productName: 'Cambric App Product',
+        version: '1.0.0',
+        templateVersion: '1.0.0',
+      );
+    }
+  }
+
+  /// Loads configuration from a bundled Flutter asset.
+  ///
+  /// `cambric_config.json` is declared as an asset in `pubspec.yaml`, so this
+  /// works in a release build where `lib/` is not present on disk.
+  static Future<CambricConfig> loadBundled(String assetPath) async {
+    try {
+      final raw = await rootBundle.loadString(assetPath);
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      return CambricConfig.fromJson(data);
+    } catch (_) {
+      // Missing or malformed asset - start with safe defaults rather than crash.
       return const CambricConfig(
         productId: 'cambric-app-product',
         productName: 'Cambric App Product',

@@ -70,9 +70,13 @@ await CacheCleanupService().clearAll();
 
 ---
 
-## Ecosystem discovery returns empty list
+## Update check says there is no release
 
-`CambricEcosystemService.discover()` scans the local registry. If no other Cambric products are installed on the same device, the list will be empty — this is correct behaviour, not a bug.
+`release.repository` in `app/lib/core/config/cambric_config.json` is empty, or the
+repository has no published release. Both produce `notAvailable`, not a crash.
+Set the repository to `owner/repo` and publish a non-draft release with an asset
+whose filename matches the platform. The template does not install anything; it
+downloads and verifies, then stops at `readyToInstall`.
 
 ---
 

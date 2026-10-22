@@ -97,9 +97,11 @@ tearDown(() async {
 
 ---
 
-## Update tests must never touch real installations
+## Update tests must never touch the network or a real installation
 
-Never call `InstallerService.install()` in tests with a real executable path. Use mocks or sandboxed temp directories.
+Never let a test reach GitHub or write into the real app data directory. Inject a
+`NetworkService` with a fake client and point downloads at a temporary directory.
+The update flow ends at `readyToInstall`; the template has no installer to call.
 
 ---
 

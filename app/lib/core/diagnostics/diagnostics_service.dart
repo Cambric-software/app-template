@@ -2,20 +2,26 @@ import 'dart:io';
 
 import '../config/cambric_config.dart';
 import '../lifecycle/version_service.dart';
+import '../security/secret_redaction_service.dart';
+import '../security/security_service.dart';
 
 /// Generates local diagnostic reports for the Cambric app.
 ///
-/// No secrets, no personal data. The user must explicitly request
-/// a report — nothing is transmitted automatically.
+/// No secrets, no personal data. The user must explicitly request a report -
+/// nothing is transmitted automatically. Error messages are passed through
+/// [SecretRedactionService] before they are written.
 class DiagnosticsService {
   DiagnosticsService({
     required CambricConfig config,
     required VersionService version,
+    SecretRedactionService? redaction,
   })  : _config = config,
-        _version = version;
+        _version = version,
+        _redaction = redaction ?? SecretRedactionService();
 
   final CambricConfig _config;
   final VersionService _version;
+  final SecretRedactionService _redaction;
 
   final List<_DiagnosticEntry> _errors = [];
   int _errorCount = 0;
@@ -33,23 +39,33 @@ class DiagnosticsService {
 
   void reportError(String message, {Object? error, StackTrace? stackTrace}) {
     _errorCount++;
-    _errors.add(_DiagnosticEntry(
-      message: message,
-      error: error?.toString(),
-      timestamp: DateTime.now(),
-    ));
+    _errors.add(
+      _DiagnosticEntry(
+        message: message,
+        error: error?.toString(),
+        timestamp: DateTime.now(),
+      ),
+    );
     if (_errors.length > 50) _errors.removeAt(0);
   }
 
   int get errorCount => _errorCount;
 
+  /// Recent errors, newest last. Already redacted for display.
+  List<String> get recentErrors => _errors
+      .map((e) => '[${e.timestamp.toIso8601String()}] ${e.message}')
+      .toList(growable: false);
+
+  /// Builds the plain-text report. The report id is a short SHA-256 digest so
+  /// a user can quote it in a support request without sending the full file.
   Future<String> generateReport() async {
-    final sb = StringBuffer()
+    final body = StringBuffer()
       ..writeln('=== Cambric App Diagnostic Report ===')
       ..writeln('Generated: ${DateTime.now().toIso8601String()}')
       ..writeln()
       ..writeln('--- Product ---')
       ..writeln('Name:        ${_config.productName}')
+      ..writeln('Id:          ${_config.productId}')
       ..writeln('Version:     ${_version.display}')
       ..writeln('Environment: ${_config.environment}')
       ..writeln()
@@ -66,13 +82,15 @@ class DiagnosticsService {
       ..writeln('--- Errors (${_errors.length} recent of $_errorCount total) ---');
 
     for (final e in _errors.take(20)) {
-      sb.writeln('[${e.timestamp.toIso8601String()}] ${e.message}');
-      if (e.error != null) sb.writeln('  Error: ${e.error}');
+      body
+        ..writeln('[${e.timestamp.toIso8601String()}] ${e.message}')
+        ..writeln('  Error: ${e.error ?? "none"}');
     }
 
-    sb.writeln();
-    sb.writeln('=== End of Report ===');
-    return sb.toString();
+    final text = _redaction.redact(body.toString());
+    final id = SecurityService.sha256String(text).substring(0, 12);
+
+    return '$text\nReport id: $id\n=== End of Report ===\n';
   }
 
   Future<bool> writeReportToFile(File outputFile) async {
@@ -100,6 +118,7 @@ class _DiagnosticEntry {
     required this.timestamp,
     this.error,
   });
+
   final String message;
   final DateTime timestamp;
   final String? error;

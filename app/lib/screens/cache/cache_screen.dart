@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_services.dart';
 import '../../core/cache/cache_cleanup_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/ds_widgets.dart';
 
+/// Inspect and clear the disposable cache.
+///
+/// Uses [CacheCleanupService], which only touches the cache directory. User data
+/// stored through `LocalStorage` is never removed here.
 class CacheScreen extends StatefulWidget {
-  const CacheScreen({super.key});
+  /// Create the cache screen.
+  const CacheScreen({super.key, required this.services});
+
+  /// Application services.
+  final AppServices services;
 
   @override
   State<CacheScreen> createState() => _CacheScreenState();
 }
 
 class _CacheScreenState extends State<CacheScreen> {
-  final _cleanup = CacheCleanupService();
-
   CacheSummary? _summary;
+  String? _error;
   bool _loading = true;
   bool _clearing = false;
 
@@ -23,51 +33,70 @@ class _CacheScreenState extends State<CacheScreen> {
   }
 
   Future<void> _refresh() async {
-    if (!mounted) return;
-    setState(() => _loading = true);
-
-    final summary = await _cleanup.summary();
-
-    if (!mounted) return;
     setState(() {
-      _summary = summary;
-      _loading = false;
+      _loading = true;
+      _error = null;
     });
+
+    try {
+      final summary = await widget.services.cacheCleanup.summary();
+      if (!mounted) return;
+      setState(() {
+        _summary = summary;
+        _loading = false;
+      });
+    } catch (error) {
+      widget.services.diagnostics.reportError('Could not read cache state', error: error);
+      if (!mounted) return;
+      setState(() {
+        _error = 'The cache directory could not be read.';
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _clear() async {
     setState(() => _clearing = true);
 
-    final result = await _cleanup.clearAll();
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Cleared ${result.entriesRemoved} items (${_formatBytes(result.bytesFreed)})',
+    try {
+      final result = await widget.services.cacheCleanup.clearAll();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cleared ${result.entriesRemoved} items '
+            '(${_formatBytes(result.bytesFreed)}).',
+          ),
         ),
-      ),
-    );
+      );
+    } catch (error) {
+      widget.services.diagnostics.reportError('Could not clear cache', error: error);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Clearing the cache failed.')),
+      );
+    }
 
     await _refresh();
     if (mounted) setState(() => _clearing = false);
   }
 
-  String _formatBytes(int bytes) {
+  static String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    }
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final summary = _summary;
+    final empty = summary != null && summary.entryCount == 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cache'),
-        actions: [
+        actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
@@ -77,84 +106,93 @@ class _CacheScreenState extends State<CacheScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Cache',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        _row(
-                          Icons.storage_outlined,
-                          'Total size',
-                          _summary?.readableSize ?? '0 B',
-                        ),
-                        const SizedBox(height: 8),
-                        _row(
-                          Icons.folder_outlined,
-                          'Cached items',
-                          '${_summary?.entryCount ?? 0}',
-                        ),
-                      ],
-                    ),
+          : DsPage(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  DsGrid(
+                    minTileWidth: 220,
+                    children: <Widget>[
+                      DsMetricTile(
+                        label: 'Total size',
+                        value: summary?.readableSize ?? 'Unknown',
+                        accent: theme.colorScheme.primary,
+                        icon: Icons.storage_outlined,
+                        status: summary == null
+                            ? DsStatus.unknown
+                            : DsStatus.positive,
+                      ),
+                      DsMetricTile(
+                        label: 'Cached items',
+                        value: '${summary?.entryCount ?? 0}',
+                        accent: AppColors.accent,
+                        icon: Icons.folder_outlined,
+                        status: empty ? DsStatus.unknown : DsStatus.info,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
+                  const SizedBox(height: Space.lg),
+                  DsCard(
                     child: Row(
-                      children: [
-                        Icon(Icons.info_outline, size: 16),
-                        SizedBox(width: 8),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Icon(
+                          Icons.info_outline,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: Space.sm),
                         Expanded(
                           child: Text(
-                            'Clearing the cache does not delete any of your data.',
-                            style: TextStyle(fontSize: 13),
+                            'Cache is disposable. Clearing it never deletes user '
+                            'data, backups or settings.',
+                            style: theme.textTheme.bodySmall,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: (_clearing || _loading) ? null : _clear,
-                  icon: _clearing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.delete_outline),
-                  label: Text(_clearing ? 'Clearing…' : 'Clear cache'),
-                ),
-              ],
+                  if (_error != null) ...<Widget>[
+                    const SizedBox(height: Space.lg),
+                    DsCard(
+                      borderColor: theme.colorScheme.error,
+                      child: Text(
+                        _error!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: Space.xl),
+                  if (empty)
+                    const DsCard(
+                      padding: EdgeInsets.zero,
+                      child: DsEmptyState(
+                        icon: Icons.cleaning_services_outlined,
+                        title: 'Cache is empty',
+                        message:
+                            'There are no disposable files yet. Products fill '
+                            'this through CacheService.',
+                      ),
+                    ),
+                  const SizedBox(height: Space.lg),
+                  FilledButton.icon(
+                    onPressed: _clearing || summary == null || empty
+                        ? null
+                        : _clear,
+                    icon: _clearing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_outline),
+                    label: Text(_clearing ? 'Clearing...' : 'Clear cache'),
+                  ),
+                ],
+              ),
             ),
-    );
-  }
-
-  Widget _row(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.outline),
-        const SizedBox(width: 8),
-        Expanded(child: Text(label)),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ],
     );
   }
 }

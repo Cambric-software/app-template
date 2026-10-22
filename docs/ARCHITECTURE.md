@@ -5,8 +5,8 @@
 This repository is the reusable Cambric Software application foundation.
 
 The goal is to provide the infrastructure that every Cambric product needs —
-storage, cache, updates, security, ecosystem communication — so each new
-product only has to implement its own domain logic.
+storage, cache, release checks, security, diagnostics — so each new product
+only has to implement its own domain logic.
 
 ---
 
@@ -34,7 +34,7 @@ product only has to implement its own domain logic.
 │                  Core Layer                          │
 │  core/config  core/storage  core/cache               │
 │  core/network  core/updates  core/security           │
-│  core/platform  core/lifecycle  core/ecosystem       │
+│  core/platform  core/lifecycle  core/logging         │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -54,9 +54,11 @@ product ID, name, version, repository, feature flags, localization, environment.
 - `CambricPaths` — all filesystem paths, platform-safe
 - `AtomicFileService` — safe write → verify → rename
 - `LocalStorage` — key/value JSON persistence (user data)
-- `BackupService` — versioned local backups
 - `MigrationService` — sequential schema migrations
-- `RestoreService` — restore from backup
+
+Backups are a product decision, not a core service. The template creates the
+`Backups/` directory but ships no backup or restore implementation; a product
+that needs one adds it and documents what it copies.
 
 ### cache
 
@@ -72,35 +74,30 @@ product ID, name, version, repository, feature flags, localization, environment.
 ### updates
 
 - `ReleaseService` — GitHub release discovery with local cache fallback
-- `UpdateService` — full state machine (idle → checking → available → downloading → verifying → readyToInstall → installing → installed)
+- `UpdateService` — check → download → verify, with a typed state machine
 - `UpdateVerificationService` — SHA-256 checksum verification
-- `UpdateRollbackService` — pre-install rollback point
+- `UpdateState` — the states the UI can render
+
+Installing a downloaded build is deliberately not in core. A background
+self-installer differs per platform and needs permissions the template should
+not assume; the product implements it after verification and says so.
 
 ### platform
 
 - `PlatformService` — Windows/Linux/Android detection
-- `InstallerService` — abstract + platform implementations
-- `DesktopIntegrationService` — shortcuts, metadata
 
 ### security
 
 - `SecurityService` — SHA-256, HMAC, file checksum
 - `InputSanitizationService` — validation and sanitization
 - `SecretRedactionService` — redact secrets from logs/exports
-- `AccessControlService` — capability-based access control
 
 ### lifecycle
 
 - `AppLifecycleService` — Flutter lifecycle observer
 - `VersionService` / `AppVersion` — authoritative version
-- `EnvironmentService` — development/test/production
 - `FeatureFlagService` — runtime feature flags
 - `Clock` / `SystemClock` / `FakeClock` — injectable time
-
-### ecosystem
-
-- `CambricEcosystemService` — stable local installation identity
-- `ProductRegistryService` — shared multi-product registry
 
 ---
 
@@ -137,7 +134,7 @@ Cambric/
 ## Adding a new subsystem
 
 1. Create a directory under `app/lib/core/<subsystem>/`.
-2. Add services with clean interfaces.
-3. Register via `ServiceRegistry` if needed.
+2. Add services with clean interfaces and no global state.
+3. Construct it in `AppServices` and pass it to the screen that needs it.
 4. Add unit tests under `app/test/core/`.
-5. Document in `docs/`.
+5. Document it in `docs/`.

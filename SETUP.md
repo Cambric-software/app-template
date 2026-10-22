@@ -88,9 +88,10 @@ After setup, update these files for your product:
 |---|---|
 | App name, ID, version | `app/lib/core/config/cambric_config.json` |
 | Platform manifest | `app/cambric.manifest.json` |
-| Theme seed color | `app/lib/theme/app_theme.dart` |
+| Palette, radii, type | `app/lib/theme/design_tokens.dart` and `app_colors.dart` (keep these values; they are shared with the web and game templates) |
 | App icon | `app/android/app/src/main/res/mipmap-*/` (Android), `app/windows/runner/resources/` (Windows) |
-| Onboarding pages | `app/lib/screens/onboarding/onboarding_screen.dart` |
+| Onboarding pages | The `OnboardingPage` list in `app/lib/app/app.dart` |
+| Download page | `app/landing/` (replace the `__PLACEHOLDER__` values) |
 
 ---
 
@@ -98,7 +99,8 @@ After setup, update these files for your product:
 
 | Directory | What to do |
 |---|---|
-| `app/lib/screens/` | Replace placeholder screens with your product screens |
-| `app/lib/services/` | Add your product-specific services |
-| `app/lib/models/` | Add your product-specific models |
+| `app/lib/screens/` | Replace the demo screens with your product screens |
+| `app/lib/services/` | Add your product-specific services beside `preferences_service.dart` |
+| `app/lib/models/` | Create it and add your product-specific models |
 | `app/lib/core/` | Do NOT replace — this is shared infrastructure |
+| `app/lib/theme/` | Keep the Cambric tokens; add product colours as new roles, not raw hex in screens |

@@ -1,28 +1,38 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
+import '../../theme/design_tokens.dart';
+
 /// A single onboarding page definition.
 class OnboardingPage {
-  final IconData icon;
-  final String title;
-  final String description;
-
+  /// Create a page.
   const OnboardingPage({
     required this.icon,
     required this.title,
     required this.description,
   });
+
+  /// Illustrative icon.
+  final IconData icon;
+
+  /// Page title.
+  final String title;
+
+  /// What this page is telling the user.
+  final String description;
 }
 
 /// Reusable paged onboarding screen.
 ///
-/// Provide [pages] with your product-specific content.
-/// Call [onComplete] when the user finishes or skips.
+/// Provide [pages] with your product-specific content. Call [onComplete] when
+/// the user finishes or skips; the caller is responsible for persisting that
+/// choice, so re-opening onboarding is possible from Settings.
 ///
 /// Usage:
 ///
 /// ```dart
 /// OnboardingScreen(
-///   pages: [
+///   pages: const <OnboardingPage>[
 ///     OnboardingPage(
 ///       icon: Icons.storage_outlined,
 ///       title: 'Local first',
@@ -33,18 +43,26 @@ class OnboardingPage {
 /// )
 /// ```
 class OnboardingScreen extends StatefulWidget {
-  final List<OnboardingPage> pages;
-  final VoidCallback onComplete;
-  final String? skipLabel;
-  final String? finishLabel;
-
+  /// Create an onboarding flow.
   const OnboardingScreen({
     super.key,
     required this.pages,
     required this.onComplete,
     this.skipLabel,
     this.finishLabel,
-  });
+  }) : assert(pages.length > 0, 'Onboarding needs at least one page.');
+
+  /// Pages, shown in order.
+  final List<OnboardingPage> pages;
+
+  /// Called when the user skips or finishes the last page.
+  final VoidCallback onComplete;
+
+  /// Label for the skip action.
+  final String? skipLabel;
+
+  /// Label for the final action.
+  final String? finishLabel;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -63,8 +81,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _next() {
     if (_current < widget.pages.length - 1) {
       _controller.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: Motion.normal,
+        curve: Motion.enter,
       );
     } else {
       widget.onComplete();
@@ -73,102 +91,128 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     final isLast = _current == widget.pages.length - 1;
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            // Skip button.
-            if (!isLast)
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: widget.onComplete,
-                  child: Text(widget.skipLabel ?? 'Skip'),
-                ),
-              ),
-
-            // Pages.
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                onPageChanged: (i) => setState(() => _current = i),
-                itemCount: widget.pages.length,
-                itemBuilder: (context, index) {
-                  final page = widget.pages[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 24,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Column(
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      Space.lg,
+                      Space.sm,
+                      Space.lg,
+                      0,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          page.icon,
-                          size: 80,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(height: 32),
-                        Text(
-                          page.title,
-                          style:
-                              Theme.of(context).textTheme.headlineSmall,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          page.description,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                    child: TextButton(
+                      onPressed: widget.onComplete,
+                      child: Text(widget.skipLabel ?? 'Skip'),
                     ),
-                  );
-                },
-              ),
-            ),
-
-            // Dots indicator.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(widget.pages.length, (i) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _current == i ? 20 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _current == i
-                        ? colorScheme.primary
-                        : colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Next / Finish button.
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _next,
-                  child: Text(
-                    isLast
-                        ? (widget.finishLabel ?? 'Get started')
-                        : 'Next',
                   ),
                 ),
-              ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _controller,
+                    onPageChanged: (i) => setState(() => _current = i),
+                    itemCount: widget.pages.length,
+                    itemBuilder: (context, index) {
+                      final page = widget.pages[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Space.xl,
+                          vertical: Space.lg,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Container(
+                              width: 96,
+                              height: 96,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(Radii.lg),
+                              ),
+                              child: Icon(
+                                page.icon,
+                                size: 42,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: Space.xl),
+                            Text(
+                              page.title,
+                              style: theme.textTheme.displaySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: Space.md),
+                            Text(
+                              page.description,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List<Widget>.generate(widget.pages.length, (i) {
+                    final selected = _current == i;
+                    return AnimatedContainer(
+                      duration: Motion.normal,
+                      margin: const EdgeInsets.symmetric(horizontal: Space.xs),
+                      width: selected ? 20 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(Radii.pill),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: Space.xl),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Space.xl),
+                  child: Row(
+                    children: <Widget>[
+                      Text(
+                        '${_current + 1} of ${widget.pages.length}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.of(
+                            AppColors.textMuted,
+                            AppColors.darkTextMuted,
+                            context,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: _next,
+                        child: Text(
+                          isLast
+                              ? (widget.finishLabel ?? 'Get started')
+                              : 'Next',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Space.xl),
+              ],
             ),
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );

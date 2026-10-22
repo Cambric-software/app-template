@@ -5,6 +5,7 @@ import '../storage/cambric_paths.dart';
 import '../storage/atomic_file_service.dart';
 import 'release_service.dart';
 import 'update_state.dart';
+import 'update_verification_service.dart';
 
 /// Full update state machine.
 ///
@@ -29,6 +30,7 @@ import 'update_state.dart';
 class UpdateService {
   final ReleaseService _releases;
   final NetworkService _network;
+  final UpdateVerificationService _verification;
   final AtomicFileService _atomic = AtomicFileService();
 
   UpdateState _state = UpdateState.idle;
@@ -39,8 +41,10 @@ class UpdateService {
   UpdateService({
     ReleaseService? releases,
     NetworkService? network,
+    UpdateVerificationService? verification,
   })  : _releases = releases ?? ReleaseService(),
-        _network = network ?? NetworkService.instance;
+        _network = network ?? NetworkService.instance,
+        _verification = verification ?? UpdateVerificationService();
 
   UpdateState get state => _state;
   ReleaseMetadata? get available => _available;
@@ -142,20 +146,17 @@ class UpdateService {
     _transition(UpdateState.verifying);
 
     try {
-      final stat = await file.stat();
-      if (stat.size == 0) {
+      final result = await _verification.verify(
+        file,
+        expectedSha256: expectedChecksum,
+      );
+
+      if (!result.passed) {
         _setError(
           UpdateState.verificationFailed,
-          'Downloaded package is empty.',
+          result.reason ?? 'Package verification failed.',
         );
         return false;
-      }
-
-      // Checksum verification (when checksum is provided).
-      if (expectedChecksum != null && expectedChecksum.isNotEmpty) {
-        // Checksum comparison happens in UpdateVerificationService.
-        // Here we just confirm the file is readable.
-        await file.readAsBytes();
       }
 
       _transition(UpdateState.readyToInstall);

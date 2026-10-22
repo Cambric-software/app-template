@@ -27,13 +27,13 @@ void main() {
     });
 
     test('AppTheme.light produces light brightness ThemeData', () {
-      final theme = AppTheme.light();
+      final theme = AppTheme.light;
       expect(theme.brightness, equals(Brightness.light));
       expect(theme.colorScheme, isNotNull);
     });
 
     test('AppTheme.dark produces dark brightness ThemeData', () {
-      final theme = AppTheme.dark();
+      final theme = AppTheme.dark;
       expect(theme.brightness, equals(Brightness.dark));
       expect(theme.colorScheme, isNotNull);
     });

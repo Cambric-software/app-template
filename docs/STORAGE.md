@@ -99,38 +99,16 @@ Migrations never downgrade. Failed migrations surface an error in the result.
 
 ---
 
-## BackupService
+## Backups
 
-```dart
-final backups = BackupService();
+There is no backup service in the template. `CambricPaths.backups()` returns a
+`Backups/` directory, but nothing writes to it unless a product chooses to.
 
-// Create a backup
-final manifest = await backups.create(
-  productId: 'my-product',
-  version: '1.4.3',
-  sourceDirectory: dataDirectory,
-);
+If your product needs backups, copy `Products/<id>/Data/` to a versioned folder
+under `Backups/`, write a small manifest beside it (product id, version, time,
+file list) and restore by copying back only after the app has closed the store.
+Do not back up `Cache/`: it is disposable by definition.
 
-// List backups
-final list = await backups.list('my-product');
+Keep backups out of the update path. An update that overwrites user data without
+a copy the user can find is a data-loss bug, not a feature.
 
-// Delete a backup
-await backups.delete(productId: 'my-product', backupId: manifest.backupId);
-```
-
----
-
-## RestoreService
-
-```dart
-final restore = RestoreService();
-
-final result = await restore.restore(
-  manifest: backupManifest,
-  destinationDirectory: dataDirectory,
-);
-
-if (!result.success) {
-  print('Restore failed: ${result.error}');
-}
-```

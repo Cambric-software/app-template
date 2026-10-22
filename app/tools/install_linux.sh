@@ -3,9 +3,10 @@
 # Run from the repository root after building the Linux application.
 set -e
 
-BUILD_PATH="./app/build/linux/x64/release/bundle"
-INSTALL_NAME="cambric-app"
-DISPLAY_NAME="Cambric App"
+BUILD_PATH="${BUILD_PATH:-./app/build/linux/x64/release/bundle}"
+INSTALL_NAME="${INSTALL_NAME:-cambric-app}"
+DISPLAY_NAME="${DISPLAY_NAME:-Cambric App}"
+MAIN_BINARY_NAME="${MAIN_BINARY_NAME:-cambric_app}"
 
 if [ ! -d "$BUILD_PATH" ]; then
     echo "Linux build not found at $BUILD_PATH"
@@ -23,7 +24,7 @@ mkdir -p "$INSTALL_DIR" "$BIN_DIR" "$DESKTOP_DIR"
 cp -r "$BUILD_PATH/." "$INSTALL_DIR/"
 
 # Detect the main executable (Flutter Linux produces 'cambric_app' by default)
-MAIN_BINARY="$INSTALL_DIR/cambric_app"
+MAIN_BINARY="$INSTALL_DIR/$MAIN_BINARY_NAME"
 
 if [ ! -f "$MAIN_BINARY" ]; then
     echo "Expected Flutter executable was not found: $MAIN_BINARY"
