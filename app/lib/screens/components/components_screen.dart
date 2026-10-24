@@ -76,7 +76,7 @@ class ComponentsScreen extends StatelessWidget {
                   unit: 'ms',
                   accent: theme.colorScheme.primary,
                   icon: Icons.speed_outlined,
-                  status: DsStatus.positive,
+                  status: HealthStatus.normal,
                 ),
                 const DsMetricTile(
                   label: 'Example metric',
@@ -84,7 +84,7 @@ class ComponentsScreen extends StatelessWidget {
                   unit: 'GB',
                   accent: AppColors.accent,
                   icon: Icons.storage_outlined,
-                  status: DsStatus.info,
+                  status: HealthStatus.normal,
                 ),
                 const DsInfoCard(
                   title: 'DsInfoCard',

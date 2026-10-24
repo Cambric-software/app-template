@@ -106,14 +106,15 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       body: Row(
         children: <Widget>[
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border(
-                right: BorderSide(color: theme.colorScheme.outline),
+          Material(
+            color: theme.colorScheme.surface,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: theme.colorScheme.outline),
+                ),
               ),
-            ),
-            child: NavigationRail(
+              child: NavigationRail(
               selectedIndex: _index,
               onDestinationSelected: (i) => setState(() => _index = i),
               labelType: NavigationRailLabelType.all,
@@ -167,6 +168,7 @@ class _AppShellState extends State<AppShell> {
                     label: Text(destination.label),
                   ),
               ],
+            ),
             ),
           ),
           Expanded(child: _screen()),

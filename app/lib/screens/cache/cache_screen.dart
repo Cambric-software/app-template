@@ -119,15 +119,15 @@ class _CacheScreenState extends State<CacheScreen> {
                         accent: theme.colorScheme.primary,
                         icon: Icons.storage_outlined,
                         status: summary == null
-                            ? DsStatus.unknown
-                            : DsStatus.positive,
+                            ? HealthStatus.normal
+                            : HealthStatus.normal,
                       ),
                       DsMetricTile(
                         label: 'Cached items',
                         value: '${summary?.entryCount ?? 0}',
                         accent: AppColors.accent,
                         icon: Icons.folder_outlined,
-                        status: empty ? DsStatus.unknown : DsStatus.info,
+                        status: empty ? HealthStatus.normal : HealthStatus.normal,
                       ),
                     ],
                   ),

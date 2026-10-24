@@ -126,14 +126,16 @@ class DsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final content = Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? theme.colorScheme.surface,
+    final content = Material(
+      color: color ?? theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.md),
-        border: Border.all(color: borderColor ?? theme.colorScheme.outline),
+        side: BorderSide(color: borderColor ?? theme.colorScheme.outline),
       ),
-      child: child,
+      child: Padding(
+        padding: padding,
+        child: child,
+      ),
     );
 
     if (onTap == null) return content;
