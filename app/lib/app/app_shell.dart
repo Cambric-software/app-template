@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../screens/components/components_screen.dart';
-import '../screens/home/home_screen.dart';
-import '../screens/settings/settings_screen.dart';
+import '../features/screens/components/components_screen.dart';
+import '../features/screens/home/home_screen.dart';
+import '../features/screens/settings/settings_screen.dart';
 import 'package:cambric_design/cambric_design.dart';
-import '../widgets/cambric_version_label.dart';
+import '../features/widgets/cambric_version_label.dart';
 import 'app_services.dart';
 
 /// The three top-level places in the template.

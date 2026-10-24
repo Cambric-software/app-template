@@ -7,7 +7,7 @@ import '../core/logging/logging_service.dart';
 import '../core/network/connectivity_service.dart';
 import '../core/storage/local_storage.dart';
 import '../core/updates/update_service.dart';
-import '../services/preferences_service.dart';
+import '../core/services/preferences_service.dart';
 
 /// The services this template actually wires at startup.
 ///

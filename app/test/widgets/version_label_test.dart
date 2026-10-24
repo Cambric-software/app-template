@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cambric_app/widgets/cambric_version_label.dart';
+import 'package:cambric_app/features/widgets/cambric_version_label.dart';
 
 void main() {
   group('CambricVersionLabel', () {
