@@ -1,6 +1,6 @@
 name: cambric_design
 description: Shared Cambric design tokens, theme and widgets.
-version: 0.1.0
+version: 0.1.1
 publish_to: none
 
 environment:
