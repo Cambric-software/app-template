@@ -815,3 +815,136 @@ enum DsStatus {
   /// Shape cue, so status does not rely on hue alone.
   final IconData icon;
 }
+class DsInfoCard extends StatelessWidget {
+  /// Create an info card.
+  const DsInfoCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.details,
+    this.badge,
+    this.badgeStatus = DsStatus.info,
+    this.onTap,
+    super.key,
+  });
+
+  /// Name of the thing being described.
+  final String title;
+
+  /// One-line description.
+  final String subtitle;
+
+  /// Icon identifying it.
+  final IconData icon;
+
+  /// Bullet points describing it.
+  final List<String> details;
+
+  /// Optional pill text, such as "Configured".
+  final String? badge;
+
+  /// Tone of the badge.
+  final DsStatus badgeStatus;
+
+  /// Makes the card tappable.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DsCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final stacked = constraints.maxWidth < 420;
+              final heading = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    padding: const EdgeInsets.all(Space.sm),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(Radii.md),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 20,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(title, style: theme.textTheme.titleSmall),
+                        const SizedBox(height: Space.xxs),
+                        Text(subtitle, style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+
+              final pill = badge == null
+                  ? null
+                  : DsStatusPill(
+                      label: badge!,
+                      color: dsStatusColor(badgeStatus, context),
+                      dense: true,
+                    );
+
+              if (pill == null) return heading;
+
+              // Side by side only when there is room for both without squeezing
+              // the heading.
+              if (stacked) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    heading,
+                    const SizedBox(height: Space.md),
+                    pill,
+                  ],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(child: heading),
+                  const SizedBox(width: Space.md),
+                  Flexible(child: pill),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: Space.md),
+          Divider(height: 1, color: theme.colorScheme.outlineVariant),
+          const SizedBox(height: Space.md),
+          for (final detail in details)
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    Icons.circle,
+                    size: 6,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: Space.sm),
+                  Expanded(
+                    child: Text(detail, style: theme.textTheme.bodySmall),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
