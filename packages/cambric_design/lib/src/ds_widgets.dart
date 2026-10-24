@@ -948,3 +948,20 @@ class DsInfoCard extends StatelessWidget {
     );
   }
 }
+
+
+/// The colour for a status, resolved against the active theme.
+Color dsStatusColor(DsStatus status, BuildContext context) {
+  switch (status) {
+    case DsStatus.positive:
+      return AppColors.of(AppColors.success, AppColors.darkSuccess, context);
+    case DsStatus.info:
+      return AppColors.of(AppColors.primary, AppColors.darkPrimary, context);
+    case DsStatus.warning:
+      return AppColors.of(AppColors.warning, AppColors.darkWarning, context);
+    case DsStatus.critical:
+      return AppColors.of(AppColors.danger, AppColors.darkDanger, context);
+    case DsStatus.unknown:
+      return AppColors.of(AppColors.textMuted, AppColors.darkTextMuted, context);
+  }
+}

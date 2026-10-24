@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cambric_app/core/config/cambric_config.dart';
-import 'package:cambric_app/theme/app_theme.dart';
+import 'package:cambric_design/cambric_design.dart';
 
 void main() {
   group('App bootstrap integration', () {

@@ -365,17 +365,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return '${local.year}-$month-$day';
   }
 
-  static DsStatus? _checkStatus(String? state) {
+  static HealthStatus? _checkStatus(String? state) {
     if (state == null) return null;
     switch (state) {
       case 'available':
-        return DsStatus.info;
+        return HealthStatus.normal;
       case 'notAvailable':
-        return DsStatus.positive;
+        return HealthStatus.normal;
       case 'checkFailed':
-        return DsStatus.critical;
+        return HealthStatus.critical;
       default:
-        return DsStatus.unknown;
+        return HealthStatus.normal;
     }
   }
 }
