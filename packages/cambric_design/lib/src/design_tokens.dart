@@ -51,6 +51,9 @@ class Radii {
   /// Small chips and inputs.
   static const double sm = 8;
 
+  /// Buttons.
+  static const double button = 11;
+
   /// The default card radius.
   static const double md = 14;
 
