@@ -8,8 +8,8 @@ import '../../core/cache/cache_cleanup_service.dart';
 import '../../core/network/connectivity_service.dart';
 import '../../core/platform/platform_service.dart';
 import '../../core/storage/cambric_paths.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/ds_widgets.dart';
+import 'package:cambric_design/cambric_design.dart';
+import 'package:cambric_design/cambric_design.dart';
 
 /// Local diagnostics: platform, connectivity, storage, cache and a report the
 /// user can copy or save. Nothing is transmitted.

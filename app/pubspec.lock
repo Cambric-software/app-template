@@ -25,6 +25,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  cambric_design:
+    dependency: "direct main"
+    description:
+      path: "../packages/cambric_design"
+      relative: true
+    source: path
+    version: "0.1.0"
   characters:
     dependency: transitive
     description:

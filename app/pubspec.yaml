@@ -10,6 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  cambric_design:
+    path: ../packages/cambric_design
   path_provider: ^2.1.4
   shared_preferences: ^2.5.3
   http: ^1.2.2

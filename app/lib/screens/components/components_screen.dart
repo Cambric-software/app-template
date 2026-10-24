@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_theme.dart';
-import '../../widgets/ds_widgets.dart';
+import 'package:cambric_design/cambric_design.dart';
+import 'package:cambric_design/cambric_design.dart';
 
 /// The living component gallery.
 ///

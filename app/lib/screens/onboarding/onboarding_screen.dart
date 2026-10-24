@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:cambric_design/cambric_design.dart';
+import 'package:cambric_design/cambric_design.dart';
 
 /// A single onboarding page definition.
 class OnboardingPage {

@@ -788,3 +788,30 @@ class DsSensorCard extends StatelessWidget {
     );
   }
 }
+
+
+/// Status of a check or reading, shown as a pill.
+enum DsStatus {
+  /// Normal, passing, complete.
+  positive('OK', Icons.check_circle_outline),
+
+  /// Neutral information.
+  info('Info', Icons.info_outline),
+
+  /// Worth watching.
+  warning('Watch', Icons.warning_amber_rounded),
+
+  /// Needs attention.
+  critical('Critical', Icons.error_outline),
+
+  /// No value available.
+  unknown('No data', Icons.help_outline);
+
+  const DsStatus(this.label, this.icon);
+
+  /// Word shown to the user.
+  final String label;
+
+  /// Shape cue, so status does not rely on hue alone.
+  final IconData icon;
+}

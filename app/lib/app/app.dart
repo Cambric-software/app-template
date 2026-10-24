@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../screens/onboarding/onboarding_screen.dart';
-import '../theme/app_theme.dart';
+import 'package:cambric_design/cambric_design.dart';
 import 'app_services.dart';
 import 'app_shell.dart';
 

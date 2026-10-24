@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_services.dart';
 import '../../core/platform/platform_service.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/ds_widgets.dart';
+import 'package:cambric_design/cambric_design.dart';
+import 'package:cambric_design/cambric_design.dart';
 import '../cache/cache_screen.dart';
 import '../diagnostics/diagnostics_screen.dart';
 

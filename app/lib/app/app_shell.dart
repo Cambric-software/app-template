@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/components/components_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/settings/settings_screen.dart';
-import '../theme/design_tokens.dart';
+import 'package:cambric_design/cambric_design.dart';
 import '../widgets/cambric_version_label.dart';
 import 'app_services.dart';
 
