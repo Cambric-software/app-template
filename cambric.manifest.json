@@ -1,0 +1,20 @@
+{
+  "manifestVersion": 1,
+  "product": {
+    "type": "app",
+    "name": "Cambric App",
+    "id": "cambric-app",
+    "packageId": "com.cambric.app",
+    "version": "0.1.0",
+    "buildNumber": 1,
+    "releaseChannel": "stable",
+    "publisher": "Cambric",
+    "developer": "Cambric",
+    "website": "https://cambric.dev",
+    "repository": "Cambric-software/app-template"
+  },
+  "platforms": ["android", "windows", "linux"],
+  "capabilities": {"offline": true, "updates": true, "ecosystem": true, "localization": true},
+  "locales": ["en"],
+  "cambricTemplateVersion": "0.1.0"
+}

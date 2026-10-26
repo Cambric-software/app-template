@@ -1,0 +1,60 @@
+name: Security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"  # Every Monday at 06:00 UTC
+
+jobs:
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: app
+        run: flutter pub get
+
+      # dart pub audit exits 1 if any advisory is found, including
+      # informational ones. We run it and surface the output without
+      # failing the pipeline for known-safe overrides (e.g. jni 1.0.3).
+      # Change continue-on-error to false once all overrides are removed.
+      - name: Audit dependencies
+        working-directory: app
+        run: dart pub audit
+        continue-on-error: true
+
+      - name: Check for hardcoded secrets in Dart source
+        working-directory: app
+        run: |
+          # Scan lib/ for patterns that suggest hardcoded credentials.
+          # Uses POSIX ERE (-E) patterns compatible with ubuntu grep.
+          FOUND=0
+          grep -rEn \
+            "SECRET[[:space:]]*=[[:space:]]*['\"]|PASSWORD[[:space:]]*=[[:space:]]*['\"]|API_KEY[[:space:]]*=[[:space:]]*['\"]|PRIVATE_KEY[[:space:]]*=[[:space:]]*['\"]" \
+            --include="*.dart" \
+            --exclude-dir="test" \
+            lib/ && FOUND=1 || true
+          if [ "$FOUND" = "1" ]; then
+            echo "FAIL: Potential hardcoded secret found in source code"
+            exit 1
+          else
+            echo "OK: No hardcoded secrets detected"
+          fi
+
+      - name: Check no .env files committed
+        run: |
+          if find . -name ".env" -not -path "*/.git/*" | grep -q .; then
+            echo "FAIL: .env file found in repository"
+            exit 1
+          else
+            echo "OK: No .env files found"
+          fi

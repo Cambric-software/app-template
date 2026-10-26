@@ -1,0 +1,19 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - windows/**
+    - linux/**
+  errors:
+    # Treat deprecated API usage as info only — some APIs deprecated in very
+    # recent Flutter releases (3.32+) still work fine on stable channel.
+    deprecated_member_use: info
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_fields: true

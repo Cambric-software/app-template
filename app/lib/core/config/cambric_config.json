@@ -1,0 +1,55 @@
+{
+  "product": {
+    "id": "cambric-app-product",
+    "name": "Cambric App Product",
+    "subtitle": "",
+    "description": "A Cambric application built on the app-template foundation.",
+    "publisher": "Cambric Software",
+    "version": "1.0.0",
+    "templateVersion": "1.0.0",
+    "website": "",
+    "supportUrl": ""
+  },
+  "release": {
+    "provider": "github",
+    "repository": "",
+    "apiBase": "https://api.github.com"
+  },
+  "cache": {
+    "version": 1,
+    "maxBytes": 524288000
+  },
+  "update": {
+    "enabled": true,
+    "automaticChecks": true,
+    "allowPrerelease": false
+  },
+  "ecosystem": {
+    "enabled": true,
+    "protocolVersion": 1
+  },
+  "localization": {
+    "defaultLanguage": "en",
+    "supportedLanguages": ["en", "ar"],
+    "rtlLanguages": ["ar"]
+  },
+  "environment": "production",
+  "featureFlags": {
+    "showDeveloperTools": false,
+    "enableExperimentalCache": false
+  },
+  "branding": {
+    "primaryColor": "",
+    "secondaryColor": ""
+  },
+  "security": {
+    "requireIntegrityCheck": true,
+    "redactLogsInProduction": true
+  },
+  "diagnostics": {
+    "enabled": true,
+    "logLevel": "info",
+    "maxLogFileSizeBytes": 5242880,
+    "maxLogFiles": 5
+  }
+}

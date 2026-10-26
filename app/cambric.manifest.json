@@ -1,0 +1,21 @@
+﻿{
+  "manifestVersion": 1,
+  "productId": "cambric-app-product",
+  "name": "Cambric App Product",
+  "version": "1.0.0",
+  "template": "app-template",
+  "templateVersion": "1.0.0",
+  "platforms": [
+    "windows",
+    "linux",
+    "android"
+  ],
+  "ecosystemProtocolVersion": 1,
+  "capabilities": [
+    "local-storage",
+    "cache",
+    "release-discovery",
+    "updates",
+    "ecosystem"
+  ]
+}
