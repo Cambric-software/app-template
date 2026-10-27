@@ -169,26 +169,7 @@
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <h2>Requirements</h2>
-    <div class="row" style="align-items:flex-start">
-      <div style="flex:1 1 460px">
-        <table>
-          <tr><th>Platform</th><th>Needs</th></tr>
-          <tr><td>Windows</td><td>Windows 10 or newer, 64-bit, Bluetooth</td></tr>
-          <tr><td>Linux</td><td>glibc distribution, 64-bit, GTK 3, Bluetooth</td></tr>
-          <tr><td>Android</td><td>Android 5.0 (API 21) or newer, Bluetooth</td></tr>
-        </table>
-      </div>
-      <p class="sub" style="flex:1 1 300px; margin:0">
-        The watch is read over Bluetooth Low Energy. App Template runs entirely
-        on your machine; the only network calls it makes are checking for updates
-        and, if you choose to use the assistant, the questions you send it.
-      </p>
-    </div>
-  </div>
-</section>
+
 
 <section>
   <div class="wrap">
@@ -261,19 +242,6 @@
       el.textContent = chosen.label;
     }
 
-    // Add the published version to the label once the API answers. If it does
-    // not, the platform label alone is still accurate, so nothing is invented.
-    fetch('https://api.github.com/repos/Cambric-software/app-template/releases/latest', {
-      headers: { Accept: 'application/vnd.github+json' }
-    })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (data && data.tag_name) {
-          el.textContent = (chosen ? chosen.label : 'Choose a platform') +
-            ' \u00b7 ' + data.tag_name;
-        }
-      })
-      .catch(function () { /* offline: keep the label as it stands */ });
   })();
 </script>
 
