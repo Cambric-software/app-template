@@ -28,6 +28,17 @@
     "enabled": true,
     "protocolVersion": 1
   },
+  "subscription": {
+    "enabled": false,
+    "provider": "none",
+    "tiers": ["free", "pro"],
+    "defaultTier": "free",
+    "licenseValidation": "offline-hmac",
+    "updateGating": {
+      "free": "stable",
+      "pro": "stable,prerelease"
+    }
+  },
   "localization": {
     "defaultLanguage": "en",
     "supportedLanguages": ["en", "ar"],

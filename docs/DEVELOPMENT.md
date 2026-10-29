@@ -42,18 +42,8 @@ Use `PascalCase`. Example: `CacheService`.
 
 ### Imports
 
-Use relative imports within the same package. Prefer:
-
-```dart
-import '../storage/local_storage.dart';
-```
-
-Not:
-
-```dart
-import 'package:cambric_app/core/storage/local_storage.dart';
-```
-
+Use relative imports within the same package. Prefer `import '../storage/local_storage.dart';` over
+`import 'package:cambric_app/core/storage/local_storage.dart';`.
 ---
 
 ## Where things belong

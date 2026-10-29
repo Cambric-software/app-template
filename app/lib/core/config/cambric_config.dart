@@ -50,6 +50,9 @@ class CambricConfig {
   final bool ecosystemEnabled;
   final int ecosystemProtocolVersion;
 
+  // Subscription configuration (tiers, provider, update gating).
+  final Map<String, dynamic> subscriptionConfig;
+
   // ── localization ──────────────────────────────────────────────────────────
 
   final String defaultLanguage;
@@ -89,6 +92,7 @@ class CambricConfig {
     this.allowPrerelease = false,
     this.ecosystemEnabled = true,
     this.ecosystemProtocolVersion = 1,
+    this.subscriptionConfig = const {},
     this.defaultLanguage = 'en',
     this.supportedLanguages = const ['en'],
     this.rtlLanguages = const [],
@@ -104,6 +108,7 @@ class CambricConfig {
     final cache = json['cache'] as Map<String, dynamic>? ?? {};
     final update = json['update'] as Map<String, dynamic>? ?? {};
     final ecosystem = json['ecosystem'] as Map<String, dynamic>? ?? {};
+    final subscription = json['subscription'] as Map<String, dynamic>? ?? {};
     final localization =
         json['localization'] as Map<String, dynamic>? ?? {};
     final branding = json['branding'] as Map<String, dynamic>? ?? {};
@@ -148,6 +153,7 @@ class CambricConfig {
           ecosystem['enabled'] as bool? ?? true,
       ecosystemProtocolVersion:
           (ecosystem['protocolVersion'] as num?)?.toInt() ?? 1,
+      subscriptionConfig: subscription,
       defaultLanguage:
           localization['defaultLanguage']?.toString() ?? 'en',
       supportedLanguages:

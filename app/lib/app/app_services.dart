@@ -5,7 +5,9 @@ import '../core/lifecycle/app_lifecycle_service.dart';
 import '../core/lifecycle/version_service.dart';
 import '../core/logging/logging_service.dart';
 import '../core/network/connectivity_service.dart';
+import '../core/security/security_service.dart';
 import '../core/storage/local_storage.dart';
+import '../core/subscription/subscription_service.dart';
 import '../core/updates/update_service.dart';
 import '../core/services/preferences_service.dart';
 
@@ -22,11 +24,17 @@ class AppServices {
     CacheCleanupService? cacheCleanup,
     ConnectivityService? connectivity,
     UpdateService? updates,
+    SubscriptionService? subscription,
   })  : preferences = preferences ?? PreferencesService.instance,
         storage = storage ?? LocalStorage(productId: config.productId),
         cacheCleanup = cacheCleanup ?? CacheCleanupService(),
         connectivity = connectivity ?? ConnectivityService(),
         updates = updates ?? UpdateService(),
+        subscription = subscription ??
+            SubscriptionService(
+              config: config,
+              security: const SecurityService(),
+            ),
         version = VersionService.fromString(config.version) {
     diagnostics = DiagnosticsService(config: config, version: version);
   }
@@ -52,6 +60,9 @@ class AppServices {
   /// Release discovery, download and verification.
   final UpdateService updates;
 
+  /// Subscription state and license validation.
+  final SubscriptionService subscription;
+
   /// Local diagnostic report builder.
   late final DiagnosticsService diagnostics;
 
@@ -70,6 +81,12 @@ class AppServices {
     } catch (error) {
       diagnostics.setStorageHealthy(false);
       diagnostics.reportError('Could not create the data directory', error: error);
+    }
+
+    try {
+      await subscription.load();
+    } catch (error) {
+      diagnostics.reportError('Could not load subscription state', error: error);
     }
   }
 

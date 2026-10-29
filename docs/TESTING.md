@@ -61,21 +61,8 @@ clock.advance(Duration(hours: 24));
 expect(clock.now(), DateTime(2026, 1, 2));
 ```
 
-Inject `Clock` into services so tests can control time:
-
-```dart
-class MyService {
-  final Clock clock;
-  MyService(this.clock);
-
-  bool isExpired(DateTime timestamp) =>
-      clock.now().difference(timestamp) > Duration(hours: 1);
-}
-
-// In tests:
-final clock = FakeClock(DateTime(2026, 1, 1, 10, 0));
-final service = MyService(clock);
-```
+Inject `Clock` into services so tests can control time: pass a `Clock` instance through the
+service constructor, and in tests supply a `FakeClock` set to the desired time.
 
 ---
 
